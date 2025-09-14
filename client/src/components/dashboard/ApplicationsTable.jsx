@@ -30,9 +30,24 @@ export default function ApplicationsTable({ apps, onOpenAdd }) {
                 <td className="px-5 py-3 text-gray-600">{a.applied_at}</td>
                 <td className="px-5 py-3">
                   <div className="flex justify-end gap-2">
-                    <button className="rounded-md px-2.5 py-1.5 text-xs bg-blue-600 text-white hover:bg-blue-700">Interview</button>
-                    <button className="rounded-md px-2.5 py-1.5 text-xs bg-emerald-600 text-white hover:bg-emerald-700">Offer</button>
-                    <button className="rounded-md px-2.5 py-1.5 text-xs bg-rose-600 text-white hover:bg-rose-700">Reject</button>
+                    <button
+                    className="rounded-md px-2.5 py-1.5 text-xs bg-blue-600 text-white hover:bg-blue-700"
+                    onClick={() => console.log("Set status to interview")}
+                    >
+                    Interview
+                    </button>
+                    <button
+                    className="rounded-md px-2.5 py-1.5 text-xs bg-emerald-600 text-white hover:bg-emerald-700"
+                    onClick={() => console.log("Set status to offer")}
+                    >
+                    Offer
+                    </button>
+                    <button
+                    className="rounded-md px-2.5 py-1.5 text-xs bg-rose-600 text-white hover:bg-rose-700"
+                    onClick={() => console.log("Set status to rejected")}
+                    >
+                    Reject
+                    </button>
                   </div>
                 </td>
               </tr>
