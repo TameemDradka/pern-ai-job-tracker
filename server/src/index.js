@@ -36,7 +36,24 @@ app.use("/auth", authRouter);
 app.use("/applications", applicationsRouter);
 app.use("/ai", aiRouter);
 
+// 404 handler for unmatched routes
+app.use((req, res) => {
+  res.status(404).json({ error: "Not found" });
+});
+
+// Centralized error handler (ensure JSON shape)
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  const status = err.status || 500;
+  const message = err.message || "Internal server error";
+  res.status(status).json({ error: message });
+});
+
 // Start
 app.listen(PORT, () => {
-  console.log(`API listening on http://localhost:${PORT}`);
+  const env = process.env.NODE_ENV || "development";
+  console.log(
+    `API listening on http://localhost:${PORT} (env=${env}, CORS_ORIGIN=${ORIGIN})`
+  );
 });

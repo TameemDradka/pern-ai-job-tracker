@@ -21,8 +21,9 @@ export default function auth(req, res, next) {
 
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      // Misconfiguration — prefer explicit 500 to avoid confusing 401s when server is mis-set
-      return res.status(500).json({ error: "JWT secret not configured" });
+      const err = new Error("JWT secret not configured");
+      err.status = 500;
+      return next(err);
     }
 
     let payload;
@@ -40,6 +41,7 @@ export default function auth(req, res, next) {
     req.user = { id };
     return next();
   } catch (err) {
-    return res.status(401).json({ error: "Unauthorized" });
+    // Unexpected error — forward to centralized error handler
+    return next(err);
   }
 }

@@ -23,7 +23,7 @@ function isValidEmail(email) {
 }
 
 // POST /auth/register
-router.post("/register", async (req, res) => {
+router.post("/register", async (req, res, next) => {
   try {
     const { email, password } = req.body || {};
 
@@ -56,7 +56,7 @@ router.post("/register", async (req, res) => {
       const result = await pool.query(insertSQL, [email, passwordHash]);
       inserted = result.rows[0];
     } catch (err) {
-      return res.status(500).json({ error: "Database error" });
+      return next(err);
     }
 
     if (!inserted) {
@@ -65,12 +65,12 @@ router.post("/register", async (req, res) => {
 
     return res.status(201).json(inserted);
   } catch (err) {
-    return res.status(500).json({ error: "Server error" });
+    return next(err);
   }
 });
 
 // POST /auth/login
-router.post("/login", async (req, res) => {
+router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body || {};
     if (!isValidEmail(email) || typeof password !== "string") {
@@ -84,7 +84,7 @@ router.post("/login", async (req, res) => {
       const result = await pool.query(selectSQL, [email]);
       user = result.rows[0];
     } catch (err) {
-      return res.status(500).json({ error: "Database error" });
+      return next(err);
     }
 
     if (!user) {
@@ -103,19 +103,19 @@ router.post("/login", async (req, res) => {
 
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      return res.status(500).json({ error: "JWT secret not configured" });
+      const err = new Error("JWT secret not configured");
+      err.status = 500;
+      return next(err);
     }
     const token = jwt.sign({ id: user.id }, secret, { expiresIn: "7d" });
     return res.json({ token });
   } catch (err) {
-    return res.status(500).json({ error: "Server error" });
+    return next(err);
   }
 });
 
-export default router;
-
 // Protected: GET /auth/me — returns current user's basic profile
-router.get("/me", auth, async (req, res) => {
+router.get("/me", auth, async (req, res, next) => {
   try {
     const { rows } = await pool.query(
       "SELECT id, email FROM users WHERE id = $1",
@@ -124,6 +124,8 @@ router.get("/me", auth, async (req, res) => {
     if (!rows[0]) return res.status(404).json({ error: "User not found" });
     return res.json(rows[0]);
   } catch (err) {
-    return res.status(500).json({ error: "Database error" });
+    return next(err);
   }
 });
+
+export default router;

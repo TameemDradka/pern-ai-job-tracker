@@ -8,7 +8,7 @@ const router = Router();
 router.use(auth);
 
 // GET /applications -> current user's applications ordered by applied_at desc
-router.get("/", async (req, res) => {
+router.get("/", async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { rows } = await pool.query(
@@ -20,12 +20,12 @@ router.get("/", async (req, res) => {
     );
     return res.json(rows);
   } catch (err) {
-    return res.status(500).json({ error: "Database error" });
+    return next(err);
   }
 });
 
 // POST /applications -> create new application
-router.post("/", async (req, res) => {
+router.post("/", async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { company, role, link = null, notes = null } = req.body || {};
@@ -48,12 +48,12 @@ router.post("/", async (req, res) => {
     const { rows } = await pool.query(insertSQL, params);
     return res.status(201).json(rows[0]);
   } catch (err) {
-    return res.status(500).json({ error: "Database error" });
+    return next(err);
   }
 });
 
 // PATCH /applications/:id/status -> update status
-router.patch("/:id/status", async (req, res) => {
+router.patch("/:id/status", async (req, res, next) => {
   try {
     const userId = req.user.id;
     const id = req.params.id;
@@ -74,12 +74,12 @@ router.patch("/:id/status", async (req, res) => {
     if (!rows[0]) return res.status(404).json({ error: "Not found" });
     return res.json(rows[0]);
   } catch (err) {
-    return res.status(500).json({ error: "Database error" });
+    return next(err);
   }
 });
 
 // DELETE /applications/:id -> delete if owned
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", async (req, res, next) => {
   try {
     const userId = req.user.id;
     const id = req.params.id;
@@ -89,7 +89,7 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ error: "Not found" });
     return res.json({ ok: true });
   } catch (err) {
-    return res.status(500).json({ error: "Database error" });
+    return next(err);
   }
 });
 
