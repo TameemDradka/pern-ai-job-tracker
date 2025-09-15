@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../lib/auth';
 import Topbar from "../components/dashboard/Topbar";
 import Sidebar from "../components/dashboard/Sidebar";
 import { Card } from "../components/dashboard/ui";
@@ -9,6 +11,12 @@ import AddApplicationModal from "../components/dashboard/AddApplicationModal";
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const { token } = useAuth();
+  const location = useLocation();
+
+  if (!token) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
 
   // demo data for shell
   const apps = [

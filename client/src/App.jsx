@@ -1,19 +1,10 @@
 import './index.css';
-import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { useAuth } from './lib/auth';
-
-// Route guard for protected routes
-function ProtectedRoute() {
-  const { token } = useAuth();
-  const location = useLocation();
-  if (!token) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
-  }
-  return <Outlet />;
-}
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Redirect authenticated users away from auth pages
 function AuthRedirect() {
