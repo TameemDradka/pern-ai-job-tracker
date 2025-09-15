@@ -1,6 +1,8 @@
 import { IconMenu, IconPlus, IconLogout } from "./icons";
+import { useAuth } from "../../lib/auth";
 
 export default function Topbar({ onToggleSidebar, onOpenAdd }) {
+  const { logout } = useAuth();
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
       <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -16,7 +18,12 @@ export default function Topbar({ onToggleSidebar, onOpenAdd }) {
                   onClick={onOpenAdd}>
             <IconPlus className="w-5 h-5" /> Add Application
           </button>
-          <button title="Sign out" className="rounded-lg p-2 hover:bg-gray-100">
+          <button
+            title="Sign out"
+            onClick={logout}
+            className="rounded-lg p-2 hover:bg-gray-100"
+            aria-label="Sign out"
+          >
             <IconLogout className="w-6 h-6 text-gray-700" />
           </button>
         </div>
