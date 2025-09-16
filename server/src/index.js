@@ -13,6 +13,7 @@ import "./db/client.js";
 import authRouter from "./routes/auth.js";
 import applicationsRouter from "./routes/applications.js";
 import aiRouter from "./routes/ai.js";
+import errorHandler, { notFound as notFoundErr } from "./middleware/error.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -37,18 +38,10 @@ app.use("/applications", applicationsRouter);
 app.use("/ai", aiRouter);
 
 // 404 handler for unmatched routes
-app.use((req, res) => {
-  res.status(404).json({ error: "Not found" });
-});
+app.use((req, res, next) => next(notFoundErr()));
 
 // Centralized error handler (ensure JSON shape)
-// eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err);
-  const status = err.status || 500;
-  const message = err.message || "Internal server error";
-  res.status(status).json({ error: message });
-});
+app.use(errorHandler);
 
 // Start
 app.listen(PORT, () => {

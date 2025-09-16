@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Modal } from "./ui";
 import api from "../../lib/api";
+import { showToast } from "../../lib/toast";
 
 export default function AddApplicationModal({ open, onClose, onCreated }) {
   const [company, setCompany] = useState("");
@@ -35,10 +36,12 @@ export default function AddApplicationModal({ open, onClose, onCreated }) {
       };
       const created = await api.post("/applications", payload);
       if (onCreated) onCreated(created);
+      showToast({ type: "success", message: "Application added" });
       reset();
       onClose && onClose();
     } catch (err) {
       setError(err?.message || "Failed to create application");
+      showToast({ type: "error", message: err?.message || "Failed to create application" });
     } finally {
       setSubmitting(false);
     }

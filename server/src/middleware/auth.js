@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { unauthorized } from "./error.js";
 
 // JWT auth middleware
 // - Reads Authorization: Bearer <token>
@@ -9,14 +10,12 @@ export default function auth(req, res, next) {
   try {
     const header = req.headers["authorization"] || req.get("Authorization");
     if (!header || typeof header !== "string") {
-      return res.status(401).json({ error: "Missing Authorization header" });
+      throw unauthorized("Missing Authorization header");
     }
 
     const [scheme, token] = header.split(" ");
     if (scheme?.toLowerCase() !== "bearer" || !token) {
-      return res
-        .status(401)
-        .json({ error: "Invalid Authorization header format" });
+      throw unauthorized("Invalid Authorization header format");
     }
 
     const secret = process.env.JWT_SECRET;
@@ -30,12 +29,12 @@ export default function auth(req, res, next) {
     try {
       payload = jwt.verify(token.trim(), secret);
     } catch (err) {
-      return res.status(401).json({ error: "Invalid or expired token" });
+      throw unauthorized("Invalid or expired token");
     }
 
     const id = payload && (payload.id ?? payload.userId ?? payload.sub);
     if (!id) {
-      return res.status(401).json({ error: "Token missing user id" });
+      throw unauthorized("Token missing user id");
     }
 
     req.user = { id };

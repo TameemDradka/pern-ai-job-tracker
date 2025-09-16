@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import FormField from '../components/FormField';
+import { showToast } from '../lib/toast';
 
 export default function Login() {
   const { login } = useAuth();
@@ -37,12 +38,15 @@ export default function Login() {
     setGeneralError('');
     try {
       await login(email, password);
+      showToast({ type: 'success', message: 'Logged in' });
       navigate('/', { replace: true });
     } catch (err) {
       if (err && err.status === 401) {
         setGeneralError('Invalid email or password');
+        showToast({ type: 'error', message: 'Invalid email or password' });
       } else {
         setGeneralError(err.message || 'Login failed');
+        showToast({ type: 'error', message: err.message || 'Login failed' });
       }
     } finally {
       setSubmitting(false);

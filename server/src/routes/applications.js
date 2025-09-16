@@ -1,6 +1,7 @@
 import { Router } from "express";
 import pool from "../db/client.js";
 import auth from "../middleware/auth.js";
+import { badRequest, notFound } from "../middleware/error.js";
 
 const router = Router();
 
@@ -36,7 +37,7 @@ router.post("/", async (req, res, next) => {
       typeof company !== "string" ||
       typeof role !== "string"
     ) {
-      return res.status(400).json({ error: "company and role are required" });
+      throw badRequest("company and role are required");
     }
 
     const insertSQL = `
@@ -61,7 +62,7 @@ router.patch("/:id/status", async (req, res, next) => {
 
     const allowed = new Set(["applied", "interview", "offer", "rejected"]);
     if (!allowed.has(status)) {
-      return res.status(400).json({ error: "Invalid status" });
+      throw badRequest("Invalid status");
     }
 
     const updateSQL = `
@@ -71,7 +72,7 @@ router.patch("/:id/status", async (req, res, next) => {
       RETURNING id, user_id, company, role, link, notes, status, applied_at
     `;
     const { rows } = await pool.query(updateSQL, [status, id, userId]);
-    if (!rows[0]) return res.status(404).json({ error: "Not found" });
+    if (!rows[0]) return next(notFound());
     return res.json(rows[0]);
   } catch (err) {
     return next(err);
@@ -85,8 +86,7 @@ router.delete("/:id", async (req, res, next) => {
     const id = req.params.id;
     const delSQL = `DELETE FROM applications WHERE id = $1 AND user_id = $2`;
     const result = await pool.query(delSQL, [id, userId]);
-    if (result.rowCount === 0)
-      return res.status(404).json({ error: "Not found" });
+    if (result.rowCount === 0) return next(notFound());
     return res.json({ ok: true });
   } catch (err) {
     return next(err);

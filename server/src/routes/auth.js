@@ -2,6 +2,11 @@ import { Router } from "express";
 import jwt from "jsonwebtoken";
 import pool from "../db/client.js";
 import auth from "../middleware/auth.js";
+import {
+  badRequest,
+  unauthorized as unauthorizedErr,
+  notFound,
+} from "../middleware/error.js";
 
 // Try to import native bcrypt, fall back to bcryptjs if not available
 let bcryptLib;
@@ -28,12 +33,10 @@ router.post("/register", async (req, res, next) => {
     const { email, password } = req.body || {};
 
     if (!isValidEmail(email)) {
-      return res.status(400).json({ error: "Invalid email" });
+      throw badRequest("Invalid email");
     }
     if (typeof password !== "string" || password.length < 8) {
-      return res
-        .status(400)
-        .json({ error: "Password must be at least 8 characters" });
+      throw badRequest("Password must be at least 8 characters");
     }
 
     const saltRounds = 10;
@@ -41,7 +44,7 @@ router.post("/register", async (req, res, next) => {
     try {
       passwordHash = await bcryptLib.hash(password, saltRounds);
     } catch (err) {
-      return res.status(500).json({ error: "Failed to hash password" });
+      return next(err);
     }
 
     // Insert user; assume a table users(id SERIAL/BIGSERIAL PK, email TEXT UNIQUE, password_hash TEXT)
@@ -60,7 +63,10 @@ router.post("/register", async (req, res, next) => {
     }
 
     if (!inserted) {
-      return res.status(409).json({ error: "Email already registered" });
+      const e = new Error("Email already registered");
+      e.status = 409;
+      e.code = "CONFLICT";
+      throw e;
     }
 
     return res.status(201).json(inserted);
@@ -74,7 +80,7 @@ router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body || {};
     if (!isValidEmail(email) || typeof password !== "string") {
-      return res.status(400).json({ error: "Invalid credentials" });
+      throw badRequest("Invalid credentials");
     }
 
     // Fetch user by email
@@ -88,7 +94,7 @@ router.post("/login", async (req, res, next) => {
     }
 
     if (!user) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      throw unauthorizedErr("Invalid email or password");
     }
 
     let ok = false;
@@ -98,7 +104,7 @@ router.post("/login", async (req, res, next) => {
       ok = false;
     }
     if (!ok) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      throw unauthorizedErr("Invalid email or password");
     }
 
     const secret = process.env.JWT_SECRET;
@@ -121,7 +127,7 @@ router.get("/me", auth, async (req, res, next) => {
       "SELECT id, email FROM users WHERE id = $1",
       [req.user.id]
     );
-    if (!rows[0]) return res.status(404).json({ error: "User not found" });
+    if (!rows[0]) return next(notFound("User not found"));
     return res.json(rows[0]);
   } catch (err) {
     return next(err);

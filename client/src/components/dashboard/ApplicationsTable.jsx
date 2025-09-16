@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Badge } from "./ui";
+import { showToast } from "../../lib/toast";
 
 export default function ApplicationsTable({ apps, onOpenAdd, onUpdateStatus, onDelete }) {
   const [busyId, setBusyId] = useState(null);
@@ -10,8 +11,10 @@ export default function ApplicationsTable({ apps, onOpenAdd, onUpdateStatus, onD
     setErrorById((e) => ({ ...e, [id]: "" }));
     try {
       await fn();
+      showToast({ type: 'success', message: 'Saved' });
     } catch (err) {
       setErrorById((e) => ({ ...e, [id]: err?.message || "Action failed" }));
+      showToast({ type: 'error', message: err?.message || 'Action failed' });
     } finally {
       setBusyId(null);
     }

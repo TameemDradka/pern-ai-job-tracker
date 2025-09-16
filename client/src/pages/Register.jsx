@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import FormField from '../components/FormField';
+import { showToast } from '../lib/toast';
 
 export default function Register() {
   const { register } = useAuth();
@@ -29,12 +30,15 @@ export default function Register() {
     setSubmitting(true);
     try {
       await register(email, password); // note: auth provider already redirects, but we want success message using navigate
+      showToast({ type: 'success', message: 'Account created' });
       navigate('/login', { state: { registered: true } });
     } catch (err) {
       if (err && err.status === 409) {
         setErrors(prev => ({ ...prev, email: 'Email already registered' }));
+        showToast({ type: 'error', message: 'Email already registered' });
       } else {
         setGeneralError(err.message || 'Registration failed');
+        showToast({ type: 'error', message: err.message || 'Registration failed' });
       }
     } finally {
       setSubmitting(false);

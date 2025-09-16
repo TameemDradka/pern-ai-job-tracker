@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
+import { showToast } from "../../lib/toast";
 
 export default function AIPanel() {
   // Textarea bound to jobDescription state
@@ -22,9 +23,12 @@ export default function AIPanel() {
       const res = await api.post("/ai/extract-skills", { jobDescription });
       setSkills(Array.isArray(res?.skills) ? res.skills : []);
       setSummary(typeof res?.summary === "string" ? res.summary : "");
+      showToast({ type: 'success', message: 'Analysis complete' });
     } catch (e) {
       // If 401, api.js will trigger global logout handler; for others show inline error
       setError("Couldn't analyze. Try again.");
+      const message = e?.data?.message || e?.message || "Analysis failed";
+      showToast({ type: 'error', message });
     } finally {
       setLoading(false);
     }
