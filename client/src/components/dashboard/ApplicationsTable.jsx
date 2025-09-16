@@ -1,6 +1,30 @@
+import { useState } from "react";
 import { Badge } from "./ui";
+import { showToast } from "../../lib/toast";
 
-export default function ApplicationsTable({ apps, onOpenAdd }) {
+export default function ApplicationsTable({ apps, onOpenAdd, onUpdateStatus, onDelete }) {
+  const [busyId, setBusyId] = useState(null);
+  const [errorById, setErrorById] = useState({});
+
+  const run = async (id, fn) => {
+    setBusyId(id);
+    setErrorById((e) => ({ ...e, [id]: "" }));
+    try {
+      await fn();
+      showToast({ type: 'success', message: 'Saved' });
+    } catch (err) {
+      setErrorById((e) => ({ ...e, [id]: err?.message || "Action failed" }));
+      showToast({ type: 'error', message: err?.message || 'Action failed' });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const confirmDelete = (id) => {
+    if (window.confirm("Delete this application? This cannot be undone.")) {
+      run(id, () => onDelete(id));
+    }
+  };
   return (
     <section className="mt-6 bg-white rounded-xl shadow-sm">
       <div className="flex items-center justify-between px-5 py-4 border-b">
@@ -29,26 +53,40 @@ export default function ApplicationsTable({ apps, onOpenAdd }) {
                 <td className="px-5 py-3"><Badge status={a.status} /></td>
                 <td className="px-5 py-3 text-gray-600">{a.applied_at}</td>
                 <td className="px-5 py-3">
-                  <div className="flex justify-end gap-2">
+                  <div className="flex justify-end items-center gap-2">
                     <button
-                    className="rounded-md px-2.5 py-1.5 text-xs bg-blue-600 text-white hover:bg-blue-700"
-                    onClick={() => console.log("Set status to interview")}
+                      className="rounded-md px-2.5 py-1.5 text-xs bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                      onClick={() => run(a.id, () => onUpdateStatus(a.id, "interview"))}
+                      disabled={busyId === a.id}
                     >
-                    Interview
+                      Interview
                     </button>
                     <button
-                    className="rounded-md px-2.5 py-1.5 text-xs bg-emerald-600 text-white hover:bg-emerald-700"
-                    onClick={() => console.log("Set status to offer")}
+                      className="rounded-md px-2.5 py-1.5 text-xs bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+                      onClick={() => run(a.id, () => onUpdateStatus(a.id, "offer"))}
+                      disabled={busyId === a.id}
                     >
-                    Offer
+                      Offer
                     </button>
                     <button
-                    className="rounded-md px-2.5 py-1.5 text-xs bg-rose-600 text-white hover:bg-rose-700"
-                    onClick={() => console.log("Set status to rejected")}
+                      className="rounded-md px-2.5 py-1.5 text-xs bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50"
+                      onClick={() => run(a.id, () => onUpdateStatus(a.id, "rejected"))}
+                      disabled={busyId === a.id}
                     >
-                    Reject
+                      Reject
+                    </button>
+                    <button
+                      className="ml-3 rounded-md px-2.5 py-1.5 text-xs bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-50"
+                      onClick={() => confirmDelete(a.id)}
+                      disabled={busyId === a.id}
+                      title="Delete"
+                    >
+                      Delete
                     </button>
                   </div>
+                  {errorById[a.id] ? (
+                    <div className="mt-1 text-xs text-rose-600 text-right">{errorById[a.id]}</div>
+                  ) : null}
                 </td>
               </tr>
             ))}
